@@ -59,55 +59,6 @@ python scripts/run_ablation.py --gpu_cache
 python scripts/make_figures.py
 ```
 
-Or, equivalently: `bash scripts/run_all.sh --gpu_cache --resume`.
-
-Useful switches: `--budget base` (~5M-param models), `--l2`, `--overfit`
-(one-batch sanity), `--deterministic`, `--iters/--batch/--patch/--lr/--seed`,
-`--resume` (continue from `checkpoints/<run>/last.pth`: model + optimizer +
-AMP scaler + iter count, so an interrupted multi-hour run doesn't lose
-progress -- safe to always pass, a no-op if there's nothing to resume).
-
-### `--gpu_cache`: fixing the real bottleneck on this hardware
-
-With the default `num_workers=0` (kept low deliberately -- each DataLoader
-worker re-imports torch, and this machine only has ~15GB RAM with little
-free), the per-iteration cost is dominated by decoding a full-resolution
-DIV2K image on CPU just to crop a 64x64 patch. Measured on the reference
-laptop (RTX 3060, 6GB VRAM): **~1.0s/iter** regardless of model (CNN and ViT
-lite measured nearly identically, which is the signature of a CPU-bound, not
-GPU-bound, loop) -- at that rate the full 150k/60k schedule is ~14 days of
-sequential compute.
-
-`--gpu_cache` (`data.datasets.build_gpu_patch_pool` +
-`data.datasets.gpu_pool_batches`) decodes the training set **once**,
-extracts a large fixed pool of GT crops (`--gpu_cache_patches`, default
-20000 -> ~1GB), and moves the whole pool to VRAM. Every training step then
-samples, augments (flip/rot90), mosaics, and builds the bilinear base
-entirely on-device -- zero CPU/disk work in the hot loop, and no
-`num_workers` vs. host-RAM tradeoff at all. Measured throughput jumps to
-**~20 it/s (CNN), ~22.5 it/s (ViT)** -- a ~20x speedup -- which brings the
-full schedule down to **roughly a day** of sequential compute:
-
-| stage | iters | it/s | time |
-|---|---|---|---|
-| CNN lite | 150k | ~20 | ~2.1 h |
-| ViT lite | 150k | ~22.5 | ~1.9 h |
-| SwinIR lite (batch 8, `--grad_checkpoint`) | 150k | ~3.9 | ~10.7 h |
-| ablation, 12 cells x 60k | 60k/cell | ~20-22 | ~9.5 h |
-| **total (sequential)** | | | **~24 h** |
-
-SwinIR is the deepest model (24 transformer blocks) and needs
-`--grad_checkpoint`; even then, batch 16 (the cnn/vit default) OOMs a 6GB
-GPU here, both in VRAM (no checkpointing) and in host RAM during validation
-(with checkpointing) -- `configs/swinir.yaml` defaults its batch to 8
-accordingly. Add validation overhead (periodic tiled inference over
-`val_max_images`) on top of the table above; it isn't included.
-
-The pool trades unlimited random crops for a large-but-fixed sample --
-20000 patches from 800 images is ~25/image, refreshed every run via
-`--seed`, not every epoch. Bump `--gpu_cache_patches` if VRAM allows; each
-1000 patches at patch=64 costs ~49MB.
-
 ## Outputs
 
 - `results/main_results.csv` — model, params_M, flops_G, latency_ms,
@@ -140,23 +91,4 @@ python -m engine.eval --config configs/cnn.yaml --bilinear          # check 2
 bash scripts/run_all.sh --smoke                                     # check 6
 ```
 
-Check 3 (`--overfit`) trains on one fixed batch with the normal cosine
-schedule, over `OVERFIT_ITERS=2000` iters (longer than the generic
-`--smoke` default of 500, so the decay actually reaches a converged tail
-instead of cutting the run off mid-descent). "Near-zero" loss in practice
-means a sharp drop (~90%+) that flattens into a clean plateau, not literally
-0.000 — the tiny/lite CNN has a nonzero representational floor for real
-photo texture at 8 fixed patches (empirically ~0.006-0.008 L1 for the tiny
-smoke preset), and that floor is independent of LR, schedule, AMP, and grad
-clipping. What the check actually verifies is that the loop drives loss down
-sharply and plateaus stably — not that it diverges, NaNs, or sits flat at
-the initial value.
 
-Check 5 (determinism) needs `--deterministic` on both runs to be bit-exact:
-`python -m engine.train --config configs/cnn.yaml --smoke --iters 100 --deterministic`,
-twice with the same `--run_name` avoided (so neither checkpoint clobbers the
-other), then diff the two `results/<run>_curves.csv`. Without `--deterministic`,
-`cudnn.benchmark=True` lets cuDNN pick from several algorithms at runtime and
-the loss trace drifts by the 5th-6th significant digit — expected, not a bug.
-With it, the loss/metric columns match exactly (only the elapsed-time column
-differs, since that's wall-clock).
