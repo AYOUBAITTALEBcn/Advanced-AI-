@@ -9,7 +9,6 @@ ablates positional-encoding type x attention-window size on the ViT (a 2D
 ## Setup
 
 ```bash
-# from the repo root; Windows: use .venv\Scripts\python.exe
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cu128
 pip install -r requirements.txt
 ```
