@@ -1,0 +1,15 @@
+# Datasets: large, third-party, and re-downloadable via `python -m data.download`
+datasets/
+
+# Trained weights: large binaries, regenerable by re-running the configs in configs/
+# (keep each run's config.yaml + curves CSV for reproducibility; drop only the .pth weights)
+checkpoints/**/*.pth
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db

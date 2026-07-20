@@ -1,0 +1,19 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Demosaicing on Kodak and McMaster: accuracy and efficiency.}
+\label{tab:main}
+\begin{tabular}{lrrrrrrrrr}
+\toprule
+Model & params\_M & flops\_G & latency\_ms & kodak\_PSNR & kodak\_CPSNR & kodak\_SSIM & mcm\_PSNR & mcm\_CPSNR & mcm\_SSIM \\
+\midrule
+CNN (EDSR-style) & 0.038 & 4.971 & 2.214 & 31.126 & 31.518 & 0.912 & 32.839 & 33.327 & 0.937 \\
+ViT & 0.082 & 0.673 & 3.858 & 30.265 & 30.600 & 0.892 & 32.282 & 32.721 & 0.931 \\
+SwinIR & 0.040 & 4.801 & 21.829 & 30.699 & 30.979 & 0.902 & 32.421 & 32.788 & 0.931 \\
+CNN (EDSR-style) & 1.222 & 160.458 & 24.696 & 43.002 & 43.468 & 0.991 & 39.448 & 40.010 & 0.974 \\
+Bilinear & 0.000 & -- & -- & 30.267 & 30.603 & 0.893 & 32.320 & 32.771 & 0.933 \\
+ViT & 1.234 & 10.144 & 8.729 & 42.440 & 42.866 & 0.990 & 38.556 & 39.065 & 0.970 \\
+SwinIR & 1.254 & -- & 226.594 & 43.070 & 43.545 & 0.991 & 39.456 & 40.015 & 0.974 \\
+\bottomrule
+\end{tabular}
+\end{table}

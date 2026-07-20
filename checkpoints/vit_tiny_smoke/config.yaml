@@ -1,0 +1,31 @@
+model:
+  name: vit
+  budget: tiny
+  window: 8
+  pe_type: rope2d
+data:
+  train_dir: ./datasets/DIV2K_train_HR
+  val_dir: ./datasets/DIV2K_val_stub
+  test:
+  - kodak
+  - mcm
+  patch: 64
+  bayer: RGGB
+  num_workers: 0
+  val_max_images: 2
+train:
+  total_iters: 500
+  batch: 8
+  lr: 0.0002
+  scheduler: cosine
+  loss: l1
+  amp: true
+  grad_clip: 1.0
+  val_every: 250
+  seed: 42
+  deterministic: false
+eval:
+  shave: 8
+  tile: 64
+  tile_overlap: 16
+  flops_size: 256

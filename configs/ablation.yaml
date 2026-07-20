@@ -1,0 +1,43 @@
+# Exp B: PE type x attention-window grid on the plain windowed ViT.
+# Base model config is the lite ViT; pe_type/window are overridden per grid cell.
+model:
+  name: vit
+  budget: lite
+  patch_embed: 4
+  dim: 120
+  depth: 6
+  heads: 6
+  window: 8            # overridden by the grid
+  pe_type: rope2d      # overridden by the grid
+data:
+  train_dir: ./datasets/DIV2K_train_HR
+  val_dir: ./datasets/DIV2K_valid_HR
+  test: [kodak, mcm]
+  patch: 64
+  bayer: RGGB
+  num_workers: 4
+  val_max_images: 20
+train:
+  # batch 32 / 30k iters sees the same total training data as batch 16 / 60k
+  # would have, but ~2x faster wall-clock: measured throughput on this
+  # hardware barely drops going 16->32 (~21 -> ~20.8 it/s with --gpu_cache),
+  # meaning the GPU has spare headroom at batch 16 -- bigger batches amortize
+  # fixed per-step overhead instead of trading off convergence quality.
+  total_iters: 30000
+  batch: 32
+  lr: 2.0e-4
+  scheduler: cosine
+  loss: l1
+  amp: true
+  grad_clip: 1.0
+  val_every: 5000
+  seed: 42
+  deterministic: false
+eval:
+  shave: 8
+  tile: 64
+  tile_overlap: 16
+  flops_size: 256
+ablation:
+  pe_types: [none, learnable, sinusoidal2d, rope2d]
+  windows: [4, 8, 16]  # 16 = global on the 16x16 token grid (patch 64 / patch_embed 4)

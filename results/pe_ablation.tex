@@ -1,0 +1,24 @@
+\begin{table}[t]
+\centering
+\small
+\caption{Positional-encoding ablation on the windowed ViT.}
+\label{tab:ablation}
+\begin{tabular}{lrrrrrr}
+\toprule
+pe\_type & window & params\_M & kodak\_CPSNR & kodak\_SSIM & mcm\_CPSNR & mcm\_SSIM \\
+\midrule
+learnable & 4 & 1.236 & 41.305 & 0.987 & 37.513 & 0.961 \\
+learnable & 8 & 1.242 & 41.648 & 0.988 & 37.816 & 0.963 \\
+learnable & 16 & 1.265 & 41.877 & 0.988 & 37.972 & 0.964 \\
+none & 4 & 1.234 & 41.328 & 0.987 & 37.572 & 0.962 \\
+none & 8 & 1.234 & 41.695 & 0.988 & 37.835 & 0.963 \\
+none & 16 & 1.234 & 41.941 & 0.989 & 38.007 & 0.964 \\
+rope2d & 4 & 1.234 & 41.463 & 0.988 & 37.601 & 0.962 \\
+rope2d & 8 & 1.234 & 41.838 & 0.988 & 37.889 & 0.963 \\
+rope2d & 16 & 1.234 & 42.379 & 0.989 & 38.275 & 0.965 \\
+sinusoidal2d & 4 & 1.234 & 41.053 & 0.987 & 37.275 & 0.960 \\
+sinusoidal2d & 8 & 1.234 & 41.493 & 0.988 & 37.609 & 0.962 \\
+sinusoidal2d & 16 & 1.234 & 41.816 & 0.988 & 37.826 & 0.963 \\
+\bottomrule
+\end{tabular}
+\end{table}
