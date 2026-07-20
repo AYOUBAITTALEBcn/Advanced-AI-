@@ -2,7 +2,6 @@
 datasets/
 
 # Trained weights: large binaries, regenerable by re-running the configs in configs/
-# (keep each run's config.yaml + curves CSV for reproducibility; drop only the .pth weights)
 checkpoints/**/*.pth
 
 # Python
